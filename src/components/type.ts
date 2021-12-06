@@ -7,8 +7,8 @@ export type TodoType = {
 export type StateType = Array<TodoType>
 
 export type ActionType = {
-  type: "add" | "delete" | "mark",
-  payload: string | number
+  type: "add" | "delete" | "mark" | "load",
+  payload: string | number | StateType | TodoType
 }
 
 export type ActionMarkerPayloadType = {id: number, status: boolean}

@@ -1,37 +1,35 @@
-import { useReducer, useState } from "react"
+import { useReducer, useEffect } from "react"
 import styles from "./App.module.css"
 import Header from "./header/header"
 import Todo from "./todo/todo"
 import { 
   StateType,
   ReducerType,
-  ActionMarkerPayloadType
+  ActionMarkerPayloadType,
+  TodoType
 } from "./type"
+import axios from 'axios'
+
+const instance = axios.create({
+  baseURL: 'http://localhost:5000/api/todo'
+})
 
 const initialState: StateType = []
 
 const todoReducer: ReducerType = (state, action) => {
   switch (action.type) {
+    case "load": {
+      const stateClone = action.payload as StateType
+
+      return stateClone
+    }
     case "add": {
-      let id = 1
       const stateClone = [...state]
-
-      if (state.length > 0) id = state[state.length-1].id + 1
-
-      if (typeof action.payload === "string") {
-        const newTodo = {
-          id,
-          description: action.payload,
-          status: false
-        }
+      const newTodo = action.payload as TodoType
   
-        console.log(newTodo)
-        stateClone.push(newTodo)
+      stateClone.push(newTodo)
   
-        return stateClone    
-      }
-
-      return state
+      return stateClone
     }
     case "delete": {
       const stateClone = [...state]
@@ -64,16 +62,61 @@ function App () {
   const [todos, dispatch] = useReducer(todoReducer, initialState)
 
   const createTodo = (description: string) => {
-    dispatch({type: "add", payload: description})
+    instance.post("/", {description, status: false})
+    .then(res => {
+      if (res?.data) {
+        const todo = res.data as TodoType
+
+        dispatch({type: "add", payload: todo})
+      }
+    })
+    .catch(err => {
+      console.error(err)
+    })
   }
 
   const deleteTodo = (id: number) => {
-    dispatch({type: "delete", payload: id})
+    instance.delete(`/${id}`)
+    .then(res => {
+      if (res?.data) {
+        const todo = res.data as TodoType
+
+        console.log(todo)
+        dispatch({type: "delete", payload: id})
+      }
+    })
+    .catch(err => {
+      console.error(err)
+    })
   }
 
   const markTodo = ({id, status}: ActionMarkerPayloadType) => {
-    dispatch({type: "mark", payload: {id, status}})
+    instance.patch(`/${id}`, {status})
+    .then(res => {
+      if (res?.data) {
+        const todo = res.data as TodoType
+
+        console.log(todo)
+        dispatch({type: "mark", payload: {id, status}})
+      }
+    })
+    .catch(err => {
+      console.error(err)
+    })
   }
+
+  useEffect(() => {
+    instance.get("/all")
+    .then(res => {
+      console.log(res.data)
+      const todos = res.data as StateType
+
+      dispatch({type: "load", payload: todos})
+    })
+    .catch(err => {
+      console.error(err)
+    })
+  }, [])
 
   return (
     <section className={styles.App}>

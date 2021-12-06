@@ -21,7 +21,7 @@ function Todo ({todo, deleteTodo, markTodo}: TodoProps) {
   return (
     <article className={styles.Todo}>
       <div>
-        <input type="checkbox" onChange={todoMarker} />
+        <input type="checkbox" onChange={todoMarker} checked={status}/>
 
         <span className={status ? styles.EndTodo:""}>{todo.description}</span>
       </div>
